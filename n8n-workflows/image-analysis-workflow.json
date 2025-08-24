@@ -1,0 +1,144 @@
+{
+  "name": "AgriScan Image Analysis",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agriscan-analyze",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "agriscan-webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract image data from webhook\nconst imageData = $input.first().json.image;\nconst filename = $input.first().json.filename;\nconst contentType = $input.first().json.contentType;\n\n// Validate input\nif (!imageData) {\n  throw new Error('No image data provided');\n}\n\n// Return processed data\nreturn {\n  json: {\n    imageBase64: imageData,\n    filename: filename,\n    contentType: contentType,\n    timestamp: new Date().toISOString()\n  }\n};"
+      },
+      "id": "process-image",
+      "name": "Process Image",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://vision.googleapis.com/v1/images:annotate?key=AIzaSyDixvpdZKCCXqZiYWC3BbsW1kKLfWkmUGk",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $credentials.googleVisionApi.accessToken }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "requests",
+              "value": "=[\n  {\n    \"image\": {\n      \"content\": \"{{ $json.imageBase64 }}\"\n    },\n    \"features\": [\n      {\n        \"type\": \"LABEL_DETECTION\",\n        \"maxResults\": 10\n      },\n      {\n        \"type\": \"TEXT_DETECTION\"\n      }\n    ]\n  }\n]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "google-vision-api",
+      "name": "Google Vision API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [680, 300],
+      "credentials": {
+        "googleVisionApi": {
+          "id": "google-vision-credentials",
+          "name": "Google Vision API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Analyze Google Vision results for agricultural patterns\nconst visionResults = $input.first().json;\nconst labels = visionResults.responses[0]?.labelAnnotations || [];\n\n// Define agricultural keywords\nconst agriculturalKeywords = [\n  'plant', 'leaf', 'flower', 'fruit', 'vegetable', 'crop',\n  'disease', 'fungus', 'bacteria', 'virus', 'pest', 'insect',\n  'brown', 'yellow', 'spot', 'blight', 'rot', 'wilt', 'mold'\n];\n\n// Analyze labels for disease indicators\nlet diseaseIndicators = [];\nlet confidence = 0;\nlet detectedDisease = 'Healthy';\nlet severity = 'Low';\n\nlabels.forEach(label => {\n  const description = label.description.toLowerCase();\n  const score = label.score;\n  \n  // Check for disease indicators\n  agriculturalKeywords.forEach(keyword => {\n    if (description.includes(keyword)) {\n      diseaseIndicators.push({\n        keyword: keyword,\n        description: label.description,\n        confidence: score\n      });\n      \n      // Update confidence and disease detection\n      if (score > confidence) {\n        confidence = score;\n      }\n    }\n  });\n});\n\n// Determine disease type based on indicators\nif (diseaseIndicators.some(indicator => \n  ['brown', 'spot', 'blight'].includes(indicator.keyword)\n)) {\n  detectedDisease = 'Leaf Blight';\n  severity = confidence > 0.7 ? 'High' : 'Moderate';\n} else if (diseaseIndicators.some(indicator => \n  ['yellow', 'wilt'].includes(indicator.keyword)\n)) {\n  detectedDisease = 'Yellow Wilt';\n  severity = confidence > 0.7 ? 'High' : 'Moderate';\n} else if (diseaseIndicators.some(indicator => \n  ['mold', 'fungus'].includes(indicator.keyword)\n)) {\n  detectedDisease = 'Fungal Infection';\n  severity = confidence > 0.7 ? 'High' : 'Moderate';\n}\n\n// Generate treatment recommendations\nconst treatments = [];\nconst prevention = [];\n\nif (detectedDisease !== 'Healthy') {\n  treatments.push('Apply appropriate fungicide or pesticide');\n  treatments.push('Remove infected plant parts');\n  treatments.push('Improve air circulation around plants');\n  \n  prevention.push('Avoid overhead watering');\n  prevention.push('Maintain proper plant spacing');\n  prevention.push('Use disease-resistant varieties');\n  prevention.push('Regular monitoring and early detection');\n}\n\nreturn {\n  json: {\n    analysis: {\n      disease: detectedDisease,\n      confidence: Math.round(confidence * 100),\n      severity: severity,\n      indicators: diseaseIndicators,\n      treatments: treatments,\n      prevention: prevention,\n      timestamp: new Date().toISOString()\n    }\n  }\n};"
+      },
+      "id": "analyze-results",
+      "name": "Analyze Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "return-results",
+      "name": "Return Results",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Process Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Image": {
+      "main": [
+        [
+          {
+            "node": "Google Vision API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Vision API": {
+      "main": [
+        [
+          {
+            "node": "Analyze Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Results": {
+      "main": [
+        [
+          {
+            "node": "Return Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "agriscan-workflow",
+  "tags": ["agriculture", "image-analysis", "disease-detection"]
+}
