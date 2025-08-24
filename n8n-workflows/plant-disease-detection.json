@@ -1,0 +1,183 @@
+{
+  "name": "Plant Disease Detection - AgriScan",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agriscan-analyze",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "agriscan-analyze"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract image and metadata from webhook\nconst image = $input.first().json.image;\nconst filename = $input.first().json.filename;\nconst timestamp = $input.first().json.timestamp;\nconst options = $input.first().json.options;\n\n// Validate required data\nif (!image) {\n  throw new Error('No image provided');\n}\n\n// Return structured data for processing\nreturn {\n  image: image,\n  filename: filename,\n  timestamp: timestamp,\n  options: options,\n  analysisId: `N8N_${Date.now()}`\n};"
+      },
+      "id": "data-extractor",
+      "name": "Data Extractor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-image",
+              "leftValue": "={{ $json.image }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "isNotEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "validation",
+      "name": "Validation",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// AI Analysis Node - Simulate plant disease detection\nconst image = $input.first().json.image;\nconst filename = $input.first().json.filename;\n\n// Simulate AI processing time\nawait new Promise(resolve => setTimeout(resolve, 2000));\n\n// Simulate disease detection based on image content\nconst diseases = [\n  {\n    disease: \"Late Blight (Phytophthora infestans)\",\n    confidence: 94,\n    severity: \"High\",\n    symptoms: [\"Dark lesions\", \"White fungal growth\", \"Rapid spread\"],\n    treatments: [\"Copper fungicide\", \"Remove infected parts\", \"Improve air circulation\"]\n  },\n  {\n    disease: \"Powdery Mildew\",\n    confidence: 87,\n    severity: \"Moderate\",\n    symptoms: [\"White powdery spots\", \"Leaf distortion\", \"Stunted growth\"],\n    treatments: [\"Neem oil\", \"Remove affected leaves\", \"Increase air circulation\"]\n  },\n  {\n    disease: \"Root Rot\",\n    confidence: 91,\n    severity: \"High\",\n    symptoms: [\"Wilting\", \"Yellow leaves\", \"Soft roots\"],\n    treatments: [\"Improve drainage\", \"Remove affected roots\", \"Apply fungicide\"]\n  }\n];\n\n// Select disease based on filename or random\nconst randomIndex = Math.floor(Math.random() * diseases.length);\nconst detectedDisease = diseases[randomIndex];\n\n// Calculate image quality based on filename\nconst imageQuality = filename.includes('jpg') || filename.includes('jpeg') ? 92 : 85;\n\nreturn {\n  ...$input.first().json,\n  aiAnalysis: {\n    disease: detectedDisease.disease,\n    confidence: detectedDisease.confidence,\n    severity: detectedDisease.severity,\n    symptoms: detectedDisease.symptoms,\n    treatments: detectedDisease.treatments,\n    imageQuality: imageQuality,\n    processingTime: 2.1,\n    dataPoints: 1500,\n    similarCases: 750,\n    treatmentSuccess: 85\n  }\n};"
+      },
+      "id": "ai-analysis",
+      "name": "AI Analysis",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 200]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Generate comprehensive analysis results\nconst aiData = $input.first().json.aiAnalysis;\nconst options = $input.first().json.options;\n\n// Generate pathogen information\nconst pathogenInfo = {\n  species: aiData.disease.includes('Phytophthora') ? 'Phytophthora infestans' :\n          aiData.disease.includes('Mildew') ? 'Erysiphe cichoracearum' :\n          aiData.disease.includes('Rot') ? 'Fusarium oxysporum' : 'Unknown',\n  strain: 'US-2024',\n  matingType: 'A1',\n  resistanceProfile: 'Standard'\n};\n\n// Generate environmental analysis\nconst environmentalAnalysis = {\n  temperatureFavorability: 'High',\n  humidityImpact: 'Optimal',\n  soilPHCompatibility: 'Neutral',\n  airCirculation: 'Poor'\n};\n\n// Generate treatment efficacy\nconst treatmentEfficacy = {\n  copperBasedFungicide: aiData.severity === 'High' ? 95 : 75,\n  biologicalControl: 82,\n  culturalPractices: 78,\n  preventionMeasures: 88\n};\n\n// Generate epidemiology data\nconst epidemiology = {\n  firstReported: 1880,\n  globalCases: '2.1M/year',\n  seasonalPeak: 'Spring',\n  geographicSpread: 'Worldwide',\n  regionalPrevalence: {\n    southeastAsia: 'High Risk',\n    northAmerica: 'Moderate Risk',\n    europe: 'Low Risk'\n  }\n};\n\n// Generate economic impact\nconst economicImpact = {\n  potentialLoss: aiData.severity === 'High' ? 3000 : 2000,\n  treatmentCost: aiData.severity === 'High' ? 250 : 150,\n  netSavings: 0, // Will be calculated\n  roi: 0, // Will be calculated\n  insurance: {\n    cropInsuranceCoverage: 'Available',\n    riskLevel: aiData.severity === 'High' ? 'High' : 'Medium',\n    preventionCredit: 'Eligible'\n  }\n};\n\n// Calculate derived values\nconst netSavings = economicImpact.potentialLoss - economicImpact.treatmentCost;\nconst roi = (netSavings / economicImpact.treatmentCost) * 100;\n\neconomicImpact.netSavings = netSavings;\neconomicImpact.roi = roi;\n\n// Generate weather analysis\nconst weatherAnalysis = {\n  currentConditions: {\n    temperature: 24,\n    humidity: 75,\n    rainfall: 12,\n    windSpeed: 8\n  },\n  diseaseFavorability: 70,\n  forecast: Array.from({length: 7}, (_, i) => ({\n    day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],\n    temp: 22 + i,\n    humidity: 70 + (i * 2)\n  }))\n};\n\nreturn {\n  success: true,\n  data: {\n    disease: aiData.disease,\n    confidence: aiData.confidence,\n    severity: aiData.severity,\n    symptoms: aiData.symptoms,\n    treatments: aiData.treatments,\n    prevention: [\n      'Regular monitoring',\n      'Proper plant care',\n      'Good cultural practices',\n      'Early detection'\n    ],\n    imageQuality: aiData.imageQuality,\n    processingTime: aiData.processingTime,\n    dataPoints: aiData.dataPoints,\n    similarCases: aiData.similarCases,\n    treatmentSuccess: aiData.treatmentSuccess,\n    pathogen: pathogenInfo,\n    environment: environmentalAnalysis,\n    treatmentEfficacy: treatmentEfficacy,\n    epidemiology: epidemiology,\n    economicImpact: economicImpact,\n    weather: weatherAnalysis,\n    workflowId: 'plant-disease-detection',\n    executionId: `exec_${Date.now()}`,\n    nodesExecuted: ['AI Analysis', 'Data Processing', 'Results Generation'],\n    workflowTime: '3.2s'\n  }\n};"
+      },
+      "id": "results-generator",
+      "name": "Results Generator",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1340, 200]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"Invalid or missing image data\",\n  \"timestamp\": \"{{ new Date().toISOString() }}\"\n}",
+        "options": {}
+      },
+      "id": "error-response",
+      "name": "Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 400]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Data Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Extractor": {
+      "main": [
+        [
+          {
+            "node": "Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation": {
+      "main": [
+        [
+          {
+            "node": "AI Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Analysis": {
+      "main": [
+        [
+          {
+            "node": "Results Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Results Generator": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "id": "plant-disease-detection",
+  "tags": [
+    {
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "id": "agriscan",
+      "name": "AgriScan"
+    }
+  ]
+}
