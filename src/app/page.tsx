@@ -18,12 +18,13 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
-    interface HomeResults {
-      // Add explicit properties as needed, e.g.:
-      disease?: string;
-      confidence?: number;
-      // ...other properties
-    }
+ interface HomeResults {
+  disease: string;
+  confidence: number;
+  severity: string;
+  treatments: string[];
+  prevention: string[];
+}
 
     const [results, setResults] = useState<HomeResults | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -98,7 +99,7 @@ export default function Home() {
               <Microscope className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 mb-2">No analysis results yet</p>
               <p className="text-sm text-gray-400">
-                Upload an image and click "Analyze Plant" to see detailed results here
+                Upload an image and click &quot;Analyze Plant&quot; to see detailed results here
               </p>
             </div>
           </CardContent>

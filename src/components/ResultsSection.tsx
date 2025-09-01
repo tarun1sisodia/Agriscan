@@ -5,7 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Microscope, Pill, History, AlertTriangle, Clock, Shield, TrendingUp, CheckCircle } from "lucide-react";
 
 interface ResultsSectionProps {
-  results: any;
+  results: {
+    disease: string;
+    confidence: number;
+    severity: string;
+    treatments: string[];
+    prevention: string[];
+  };
 }
 
 export default function ResultsSection({ results }: ResultsSectionProps) {
@@ -24,7 +30,7 @@ export default function ResultsSection({ results }: ResultsSectionProps) {
               <Microscope className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500 mb-2">No analysis results yet</p>
               <p className="text-sm text-gray-400">
-                Upload an image and click "Analyze Plant" to see detailed results here
+                Upload an image and click &quot;Analyze Plant&quot; to see detailed results here
               </p>
             </div>
           </CardContent>

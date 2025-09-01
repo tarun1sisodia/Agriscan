@@ -18,6 +18,13 @@ interface UploadSectionProps {
   onAnalyze: () => void;
 }
 
+interface SampleImage {
+  name: string;
+  severity: string;
+  confidence: number;
+  image: string;
+}
+
 export default function UploadSection({
   selectedFile,
   isAnalyzing,
@@ -32,7 +39,7 @@ export default function UploadSection({
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const sampleImages = [
+  const sampleImages: SampleImage[] = [
     { name: "Tomato Blight", severity: "High", confidence: 94, image: "/sample1.jpg" },
     { name: "Corn Rust", severity: "Moderate", confidence: 87, image: "/sample2.jpg" },
     { name: "Wheat Powdery Mildew", severity: "Low", confidence: 92, image: "/sample3.jpg" },
@@ -71,7 +78,7 @@ export default function UploadSection({
     }
   };
 
-  const handleSampleImageClick = (sample: any) => {
+  const handleSampleImageClick = (sample: SampleImage) => {
     onFileSelect(new File([], sample.name));
   };
 

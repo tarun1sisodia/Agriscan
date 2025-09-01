@@ -5,7 +5,27 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Award, Star, MessageCircle, Calendar, MapPin, Building } from "lucide-react";
 
 interface ExpertRecommendationsProps {
-  results: any;
+  results: {
+    disease?: string;
+    severity?: string;
+    symptoms?: string[];
+    confidence?: number;
+    economicImpact?: {
+      netSavings?: number;
+    };
+    technicalMetrics?: {
+      similarCasesFound?: number;
+    };
+    pathogenIdentification?: {
+      species?: string;
+      resistanceProfile?: string;
+    };
+    treatmentEfficacy?: {
+      copperBasedFungicide?: number;
+      biologicalControl?: number;
+      culturalPractices?: number;
+    };
+  };
 }
 
 export default function ExpertRecommendations({ results }: ExpertRecommendationsProps) {
@@ -136,7 +156,7 @@ export default function ExpertRecommendations({ results }: ExpertRecommendations
                         {expert.experience}
                       </div>
                     </div>
-                    <p className="text-sm text-gray-700 mb-3 italic">"{expert.recommendation}"</p>
+                    <p className="text-sm text-gray-700 mb-3 italic">&quot;{expert.recommendation}&quot;</p>
                     <div className="space-y-2">
                       <div>
                         <span className="text-xs font-medium text-gray-600">Credentials:</span>

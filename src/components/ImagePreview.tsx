@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, ZoomIn, ZoomOut } from "lucide-react";
@@ -31,10 +32,12 @@ export function ImagePreview({ file, onRemove }: ImagePreviewProps) {
     <Card className="relative overflow-hidden">
       <CardContent className="p-0">
         <div className="relative group">
-          <img
+          <Image
             src={imageUrl}
             alt="Plant preview"
-            className={`w-full h-48 object-cover transition-transform duration-300 ${
+            fill
+            sizes="100vw"
+            className={`object-cover transition-transform duration-300 ${
               isZoomed ? "scale-110" : "scale-100"
             }`}
           />

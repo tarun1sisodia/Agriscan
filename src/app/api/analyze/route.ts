@@ -1,8 +1,56 @@
 import { ImageAnnotatorClient } from "@google-cloud/vision";
 import { NextRequest, NextResponse } from "next/server";
 
+// For Google Vision
+interface GoogleVisionLabel {
+  description: string;
+  confidence: number;
+}
+
+// For Plant.id
+interface PlantIdResult {
+  health_assessment?: {
+    disease?: string;
+    probability: number;
+  };
+  result?: {
+    classification?: {
+      suggestions?: {
+        name: string;
+        probability: number;
+      }[];
+    };
+  };
+}
+
+// For Azure Vision
+interface AzureVisionTag {
+  name: string;
+  confidence: number;
+}
+
+interface AzureVisionResult {
+  tags: AzureVisionTag[];
+}
+
+// For Weather
+interface WeatherData {
+  temperature: number;
+  humidity: number;
+  description: string;
+  windSpeed: number;
+}
+
+// For Pathogen Info
+interface PathogenInfo {
+  species: string;
+  strain: string;
+  matingType: string;
+  resistanceProfile: string;
+}
+
 // Real AI service integrations
-async function analyzeWithGoogleVision(imageBuffer: Buffer) {
+async function analyzeWithGoogleVision(imageBuffer: Buffer): Promise<GoogleVisionLabel[] | null> {
   try {
     // Google Cloud Vision API integration
     const client = new ImageAnnotatorClient({
@@ -29,7 +77,7 @@ async function analyzeWithGoogleVision(imageBuffer: Buffer) {
   }
 }
 
-async function analyzeWithPlantId(imageBuffer: Buffer) {
+async function analyzeWithPlantId(imageBuffer: Buffer): Promise<PlantIdResult | null> {
   try {
     // Plant.id API integration for plant disease detection
     const response = await fetch("https://api.plant.id/v2/identify", {
@@ -57,7 +105,7 @@ async function analyzeWithPlantId(imageBuffer: Buffer) {
   }
 }
 
-async function analyzeWithAzureComputerVision(imageBuffer: Buffer) {
+async function analyzeWithAzureComputerVision(imageBuffer: Buffer): Promise<AzureVisionResult | null> {
   try {
     // Azure Computer Vision API integration
     const endpoint = process.env.AZURE_VISION_ENDPOINT;
@@ -67,17 +115,19 @@ async function analyzeWithAzureComputerVision(imageBuffer: Buffer) {
       throw new Error("Azure Vision credentials not configured");
     }
 
-    const response = await fetch(
-      `${endpoint}/vision/v3.2/analyze?visualFeatures=Tags,Description&language=en`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/octet-stream",
-          "Ocp-Apim-Subscription-Key": key,
-        },
-        body: imageBuffer as any,
-      }
-    );
+    const arrayBuffer = imageBuffer.buffer.slice(imageBuffer.byteOffset, imageBuffer.byteOffset + imageBuffer.byteLength);
+    const uint8 = new Uint8Array(imageBuffer);
+const response = await fetch(
+  `${endpoint}/vision/v3.2/analyze?visualFeatures=Tags,Description&language=en`,
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/octet-stream",
+      "Ocp-Apim-Subscription-Key": key,
+    },
+    body: uint8, // directly send bytes
+  }
+);
 
     if (!response.ok) {
       throw new Error(`Azure Vision API error: ${response.status}`);
@@ -91,7 +141,7 @@ async function analyzeWithAzureComputerVision(imageBuffer: Buffer) {
   }
 }
 
-async function getWeatherData(latitude: number, longitude: number) {
+async function getWeatherData(latitude: number, longitude: number): Promise<WeatherData | null> {
   try {
     // OpenWeatherMap API for weather data
     const apiKey = process.env.OPENWEATHER_API_KEY;
@@ -161,7 +211,7 @@ export async function POST(request: NextRequest) {
       ]);
 
     // Get weather data if coordinates provided
-    let weatherData = null;
+    let weatherData: WeatherData | null = null;
     if (latitude && longitude) {
       weatherData = await getWeatherData(
         parseFloat(latitude),
@@ -207,10 +257,10 @@ export async function POST(request: NextRequest) {
 }
 
 function processAnalysisResults(
-  googleVisionResult: PromiseSettledResult<any>,
-  plantIdResult: PromiseSettledResult<any>,
-  azureVisionResult: PromiseSettledResult<any>,
-  weatherData: any,
+  googleVisionResult: PromiseSettledResult<GoogleVisionLabel[] | null>,
+  plantIdResult: PromiseSettledResult<PlantIdResult | null>,
+  azureVisionResult: PromiseSettledResult<AzureVisionResult | null>,
+  weatherData: WeatherData | null,
   filename: string
 ) {
   // Extract disease information from Plant.id results
@@ -261,7 +311,7 @@ function processAnalysisResults(
   let imageLabels: string[] = [];
   if (googleVisionResult.status === "fulfilled" && googleVisionResult.value) {
     imageLabels = googleVisionResult.value.map(
-      (label: any) => label.description
+      (label) => label.description
     );
   }
 
@@ -269,7 +319,7 @@ function processAnalysisResults(
   let imageTags: string[] = [];
   if (azureVisionResult.status === "fulfilled" && azureVisionResult.value) {
     if (azureVisionResult.value.tags) {
-      imageTags = azureVisionResult.value.tags.map((tag: any) => tag.name);
+      imageTags = azureVisionResult.value.tags.map((tag) => tag.name);
     }
   }
 
@@ -449,7 +499,7 @@ function calculateImageQuality(labels: string[], tags: string[]): number {
 }
 
 function generatePathogenInfo(disease: string) {
-  const pathogens: { [key: string]: any } = {
+  const pathogens: { [key: string]: PathogenInfo } = {
     "leaf blight": {
       species: "Phytophthora infestans",
       strain: "US-23",
@@ -485,7 +535,7 @@ function generatePathogenInfo(disease: string) {
   };
 }
 
-function generateEnvironmentalAnalysis(weatherData: any) {
+function generateEnvironmentalAnalysis(weatherData: WeatherData | null) {
   if (!weatherData) {
     return {
       temperatureFavorability: "Unknown",
@@ -598,7 +648,7 @@ function generateEconomicImpact(severity: string) {
   };
 }
 
-function generateWeatherAnalysis(weatherData: any) {
+function generateWeatherAnalysis(weatherData: WeatherData | null) {
   if (!weatherData) {
     return {
       currentConditions: {

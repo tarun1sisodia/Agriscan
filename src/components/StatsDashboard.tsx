@@ -69,7 +69,7 @@ export default function StatsDashboard() {
           Real-Time Analytics
         </h2>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Live insights into our platform's performance and global impact on agricultural disease detection
+          Live insights into our platform&apos;s performance and global impact on agricultural disease detection
         </p>
       </div>
       
