@@ -18,7 +18,14 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisProgress, setAnalysisProgress] = useState(0);
-  const [results, setResults] = useState<any>(null);
+    interface HomeResults {
+      // Add explicit properties as needed, e.g.:
+      disease?: string;
+      confidence?: number;
+      // ...other properties
+    }
+
+    const [results, setResults] = useState<HomeResults | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeAnalysisTab, setActiveAnalysisTab] = useState<'basic' | 'advanced' | 'expert' | 'stats'>('basic');
 

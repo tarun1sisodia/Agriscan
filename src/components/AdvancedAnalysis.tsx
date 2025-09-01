@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Database, Microscope, Zap, Cloud, Target, TrendingUp, Clock, CheckCircle, AlertTriangle, Info } from "lucide-react";
+import { Database, Zap, Target, TrendingUp, Cloud } from "lucide-react";
 
 interface AdvancedAnalysisProps {
   results: any;
@@ -156,11 +156,13 @@ export default function AdvancedAnalysis({ results }: AdvancedAnalysisProps) {
                 {results.epidemiology?.regionalPrevalence && Object.entries(results.epidemiology.regionalPrevalence).map(([region, risk]) => (
                   <div key={region} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                     <span className="text-sm capitalize">{region.replace(/([A-Z])/g, ' $1').trim()}</span>
-                    <Badge variant={
-                      risk === "High Risk" || risk === "Very High Risk" ? "destructive" : 
-                      risk === "Moderate Risk" ? "secondary" : "default"
-                    }>
-                      {risk}
+                    <Badge
+                      variant={
+                        risk === "High Risk" ? "destructive" :
+                        risk === "Moderate Risk" ? "secondary" : "default"
+                      }
+                    >
+                      {String(risk)}
                     </Badge>
                   </div>
                 ))}
@@ -200,7 +202,6 @@ export default function AdvancedAnalysis({ results }: AdvancedAnalysisProps) {
             </div>
 
             <div className="space-y-2">
-              <h5 className="font-medium text-gray-800">Insurance & Risk Assessment</h5>
               <div className="space-y-2">
                 {results.economicImpact?.insurance && Object.entries(results.economicImpact.insurance).map(([key, value]) => (
                   <div key={key} className="flex items-center justify-between p-2 bg-gray-50 rounded">
@@ -210,7 +211,7 @@ export default function AdvancedAnalysis({ results }: AdvancedAnalysisProps) {
                       value === "Limited" ? "secondary" : 
                       value === "High" ? "destructive" : "default"
                     }>
-                      {value}
+                      {String(value)}
                     </Badge>
                   </div>
                 ))}
