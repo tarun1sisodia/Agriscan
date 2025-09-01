@@ -47,7 +47,7 @@ export default function UploadSection({
 
   const handleCameraCapture = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    await navigator.mediaDevices.getUserMedia({ video: true });
     } catch (err) {
       console.error('Error accessing camera:', err);
     }

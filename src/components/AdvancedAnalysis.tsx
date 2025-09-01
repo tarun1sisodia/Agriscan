@@ -64,7 +64,7 @@ export default function AdvancedAnalysis({ results }: AdvancedAnalysisProps) {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {technicalMetrics.map((metric, index) => (
-              <div key={index} className="space-y-2">
+                <div key={metric.name} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-gray-700">{metric.name}</span>
                   <span className="text-sm font-bold text-gray-900">
@@ -97,7 +97,7 @@ export default function AdvancedAnalysis({ results }: AdvancedAnalysisProps) {
         <CardContent>
           <div className="space-y-6">
             {aiInsights.map((insight, index) => (
-              <div key={index} className="space-y-3">
+                <div key={insight.category} className="space-y-3">
                 <h4 className="font-semibold text-gray-800 flex items-center">
                   <Target className="h-4 w-4 mr-2 text-blue-600" />
                   {insight.category}
