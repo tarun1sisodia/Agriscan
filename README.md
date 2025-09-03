@@ -48,26 +48,50 @@ AgriScan is a comprehensive plant disease detection platform that uses **n8n AI 
 5. Copy the webhook URL
 
 #### **Option B: Self-hosted n8n**
-1. Install n8n: `npm install n8n -g`
-2. Start n8n: `n8n start`
+1. Install n8n globally:
+   ```bash
+   npm install n8n -g
+   ```
+2. Start n8n:
+   ```bash
+   n8n start
+   ```
 3. Access n8n at `http://localhost:5678`
 4. Import the workflow from `n8n-workflows/plant-disease-detection.json`
 5. Activate the workflow
-6. Copy the webhook URL
+6. Copy the webhook URL (typically `http://localhost:5678/webhook/agriscan-analyze`)
 
 ### 4. **Environment Configuration**
 
 Copy the environment example file and configure your n8n settings:
 
    ```bash
-cp env .env.local
-```
+   cp env.example .env
+   ```
 
 #### **Required n8n Configuration:**
 ```
-N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/agriscan-analyze
-N8N_API_KEY=your_n8n_api_key_here
+N8N_WEBHOOK_URL=http://localhost:5678/webhook/agriscan-analyze
+N8N_API_KEY=your_n8n_api_key
 ```
+
+### 5. **Run the Next.js Application**
+
+1. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+2. Access the application at `http://localhost:3000`
+
+3. Upload an image to test the integration with n8n
+
+### 6. **How the Integration Works**
+
+1. The Next.js application uploads images through the `/api/analyze` endpoint
+2. The API route forwards the image to the n8n webhook
+3. n8n processes the image using the plant disease detection workflow
+4. Results are returned to the Next.js application and displayed to the user
 
 #### **Optional: Alternative AI Services (Fallback)**
 ```

@@ -1,5 +1,5 @@
 {
-  "name": "AgriScan Image Analysis (Fixed)",
+  "name": "My workflow",
   "nodes": [
     {
       "parameters": {
@@ -8,39 +8,40 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "e8b9f801-c17d-4364-8fc1-3f0c2fc43835",
+      "id": "a06e7337-9513-4494-8bc0-d6d3c2da3388",
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        -260,
-        320
-      ]
+        -944,
+        -112
+      ],
+      "webhookId": "2f862719-304e-40dc-bbad-25cfd08b3452"
     },
     {
       "parameters": {
         "jsCode": "// Get the first input item which contains our data\nconst item = $input.first();\n\n// It appears your data is nested. Let's safely access the nested object first.\n// This path comes from your observation: item.json.body.json\nconst dataPayload = item.json.body.json;\n\n// Validate that the nested object exists\nif (!dataPayload) {\n  throw new Error('Could not find the nested data payload at path: item.json.body.json');\n}\n\n// Now, get both the image and the filename from the SAME nested object\nconst imageBase64 = dataPayload.image;\nconst filename = dataPayload.ad_filename;\n\n// Validate that the Base64 data actually exists\nif (!imageBase64) {\n  throw new Error('No Base64 image data found in the nested payload.');\n}\n\n// The data is ALREADY in Base64, so no conversion is needed.\n// We just pass it through to the next node.\nreturn {\n  json: {\n    imageBase64: imageBase64,\n    filename: filename\n  }\n};"
       },
-      "id": "0871f93c-0213-4b8c-a117-1ea0f5e8fc39",
+      "id": "28e1f9b9-5703-4c3d-aa8b-b0e2636b8fc2",
       "name": "Process Image",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        260,
-        320
+        -416,
+        -112
       ]
     },
     {
       "parameters": {
         "jsCode": "// Get the Gemini API response from the previous node\nconst geminiResponse = $input.first().json;\n\n// Safely get the text result from the Gemini response structure\nconst analysisText = geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text?.toLowerCase() || '';\n\n// If there's no text, we can't analyze.\nif (!analysisText) {\n  return {\n    json: {\n      analysis: {\n        disease: 'Analysis Failed - No text returned from AI',\n        confidence: 0,\n        severity: 'Unknown',\n        rawText: '',\n        timestamp: new Date().toISOString()\n      }\n    }\n  };\n}\n\n// Define agricultural keywords\nconst agriculturalKeywords = [\n  'disease', 'fungus', 'bacteria', 'virus', 'pest', 'insect',\n  'brown', 'yellow', 'spot', 'blight', 'rot', 'wilt', 'mold'\n];\n\n// Check which keywords appear in the analysis text\nconst foundIndicators = agriculturalKeywords.filter(keyword => analysisText.includes(keyword));\n\nlet detectedDisease = 'Healthy';\nlet severity = 'Low';\n\n// Determine disease type based on keywords found in the text\nif (foundIndicators.some(k => ['blight', 'brown spot'].includes(k))) {\n  detectedDisease = 'Leaf Blight';\n  severity = 'Moderate';\n} else if (foundIndicators.some(k => ['yellow', 'wilt'].includes(k))) {\n  detectedDisease = 'Yellow Wilt';\n  severity = 'Moderate';\n} else if (foundIndicators.some(k => ['mold', 'fungus', 'rot'].includes(k))) {\n  detectedDisease = 'Fungal Infection';\n  severity = 'High';\n} else if (foundIndicators.length > 0) {\n    // If some other general disease keyword was found\n    detectedDisease = 'Potential Disease Detected';\n    severity = 'Low';\n}\n\n// Generate treatment recommendations\nconst treatments = [];\nconst prevention = [];\n\nif (detectedDisease !== 'Healthy') {\n  treatments.push('Apply appropriate fungicide or pesticide');\n  treatments.push('Remove infected plant parts');\n  treatments.push('Improve air circulation around plants');\n  \n  prevention.push('Avoid overhead watering');\n  prevention.push('Maintain proper plant spacing');\n  prevention.push('Use disease-resistant varieties');\n  prevention.push('Regular monitoring and early detection');\n}\n\nreturn {\n  json: {\n    analysis: {\n      disease: detectedDisease,\n      confidence: detectedDisease !== 'Healthy' ? 75 : 100,\n      severity: severity,\n      indicators: foundIndicators,\n      treatments: treatments,\n      prevention: prevention,\n      rawText: geminiResponse.candidates?.[0]?.content?.parts?.[0]?.text,\n      timestamp: new Date().toISOString()\n    }\n  }\n};"
       },
-      "id": "80bf78ae-d652-429c-9096-bd4b23fda6f0",
+      "id": "23157277-9ef7-44bb-b1ec-7e9e72644978",
       "name": "Analyze Results",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        940,
-        320
+        272,
+        -112
       ]
     },
     {
@@ -49,13 +50,13 @@
         "responseBody": "={{ $json }}",
         "options": {}
       },
-      "id": "35602d06-5bd0-43f3-bf46-fcc470141cc5",
+      "id": "ee6fc6eb-f598-428e-b88d-e2ec41948721",
       "name": "Return Results",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        1140,
-        320
+        464,
+        -112
       ]
     },
     {
@@ -69,26 +70,26 @@
           ]
         }
       },
-      "id": "102237a6-ac32-4edc-8f36-e075098dfcc2",
+      "id": "387904fb-689f-4b69-afca-b9df41217615",
       "name": "Check Image",
       "type": "n8n-nodes-base.if",
       "typeVersion": 1,
       "position": [
-        -40,
-        320
+        -720,
+        -112
       ]
     },
     {
       "parameters": {
         "options": {}
       },
-      "id": "309349ac-9e37-456b-a6d8-881aec8092ed",
+      "id": "260ef924-d521-4b50-8159-62abe6e8a572",
       "name": "Return Error",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        180,
-        460
+        -496,
+        32
       ]
     },
     {
@@ -98,17 +99,18 @@
         "modelId": "models/gemini-1.5-flash-latest",
         "text": "Analyze this image of a plant leaf and identify if it has any diseases. Describe the disease, its severity, and suggest potential treatments.",
         "inputType": "binary",
-        "binaryPropertyName": "data",
+        "binaryPropertyName": "={{ $('Process Image').item.json.imageBase64 }}",
         "options": {}
       },
-      "id": "12dcfc2c-8742-4cef-b9f1-eaac7cf67545",
+      "id": "1cd72d38-c8f9-40a7-8a62-6921a1e0fefb",
       "name": "Analyze image",
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1,
       "position": [
-        700,
-        320
+        32,
+        -112
       ],
+      "alwaysOutputData": false,
       "credentials": {
         "googlePalmApi": {
           "id": "1ziRrxnotmCAcFth",
@@ -118,40 +120,28 @@
     },
     {
       "parameters": {
-        "operation": "base64ToBinary",
-        "sourceKey": "={{ $json.imageBase64 }}",
-        "destinationKey": "data",
-        "options": {
-          "fileName": "={{ $json.filename }}"
-        }
+        "operation": "toBinary",
+        "sourceProperty": "imageBase64",
+        "binaryPropertyName": "={{ $('Check Image').item.json.body.json.image }}",
+        "options": {}
       },
-      "id": "97e651e0-3238-4e3a-9e12-36c1cf44bfdd",
-      "name": "Move Binary Data",
-      "type": "n8n-nodes-base.moveBinaryData",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
       "position": [
-        480,
-        320
-      ]
+        -208,
+        -112
+      ],
+      "id": "acafe5f9-6fb7-47ba-8948-a2337dd59c21",
+      "name": "Convert to File"
     }
   ],
+  "pinData": {},
   "connections": {
     "Webhook Trigger": {
       "main": [
         [
           {
             "node": "Check Image",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Process Image": {
-      "main": [
-        [
-          {
-            "node": "Move Binary Data",
             "type": "main",
             "index": 0
           }
@@ -198,7 +188,18 @@
         ]
       ]
     },
-    "Move Binary Data": {
+    "Process Image": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
       "main": [
         [
           {
@@ -210,5 +211,16 @@
       ]
     }
   },
-  "settings": {}
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "1f144da3-8f36-4889-80c8-b1bcd2c67936",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c8aa832c938d1bee0e89636b4f5ad8c1c84e20852cd74b73822fe7930d1a9a4a"
+  },
+  "id": "boXN7mgb5RZInWm5",
+  "tags": []
 }

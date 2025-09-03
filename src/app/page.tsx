@@ -49,6 +49,7 @@ export default function Home() {
     setAnalysisProgress(0);
     setError(null);
 
+    // This simulates a smooth progress bar
     const progressInterval = setInterval(() => {
       setAnalysisProgress(prev => {
         if (prev >= 90) {
@@ -68,16 +69,28 @@ export default function Home() {
         body: formData,
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Analysis failed');
+        // Updated to get the nested error message for better feedback
+        throw new Error(result.error?.message || 'Analysis failed');
       }
 
-      const result = await response.json();
-      setResults(result.data.analysis);
-      setAnalysisProgress(100);
+      // Check if the expected 'analysis' key exists
+      if (result.analysis) {
+        // FIX IS HERE: Access result.analysis directly
+        setResults(result.analysis);
+        
+        setAnalysisProgress(100);
+      } 
+      else {
+        // Handle cases where the response is successful but data is missing
+        throw new Error('Received an invalid response from the server.');
+      }
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Analysis failed. Please try again.");
+      setError(err instanceof Error ? err.message : "An unknown error occurred. Please try again.");
+      setAnalysisProgress(0); // Reset progress on error
     } finally {
       setIsAnalyzing(false);
       clearInterval(progressInterval);
