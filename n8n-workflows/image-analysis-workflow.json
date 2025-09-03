@@ -13,11 +13,11 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [240, 300],
-      "webhookId": "agriscan-webhook"
+      "webhookId": "agriscan-analyze"
     },
     {
       "parameters": {
-        "jsCode": "// Extract image data from webhook\nconst imageData = $input.first().json.image;\nconst filename = $input.first().json.filename;\nconst contentType = $input.first().json.contentType;\n\n// Validate input\nif (!imageData) {\n  throw new Error('No image data provided');\n}\n\n// Return processed data\nreturn {\n  json: {\n    imageBase64: imageData,\n    filename: filename,\n    contentType: contentType,\n    timestamp: new Date().toISOString()\n  }\n};"
+        "jsCode": "// Extract image data from webhook\nconst inputData = $input.first();\n\n// Log the input for debugging\nconsole.log('Input data structure:', JSON.stringify(inputData));\n\n// Try to extract image data from different possible locations\nlet imageData = null;\nlet filename = null;\nlet contentType = null;\n\n// Check if data is in json property\nif (inputData.json) {\n  console.log('Checking json property:', JSON.stringify(inputData.json));\n  imageData = inputData.json.image;\n  filename = inputData.json.filename;\n  contentType = inputData.json.contentType;\n}\n\n// Check if data is directly in the input\nif (!imageData && inputData.image) {\n  console.log('Checking direct input properties');\n  imageData = inputData.image;\n  filename = inputData.filename;\n  contentType = inputData.contentType;\n}\n\n// Check if data is in body property\nif (!imageData && inputData.body) {\n  console.log('Checking body property');\n  let body;\n  try {\n    body = typeof inputData.body === 'string' ? JSON.parse(inputData.body) : inputData.body;\n    console.log('Parsed body:', JSON.stringify(body));\n    imageData = body.image;\n    filename = body.filename;\n    contentType = body.contentType;\n  } catch (error) {\n    console.log('Error parsing body:', error.message);\n  }\n}\n\n// Check if data is in the root of inputData\nif (!imageData && typeof inputData === 'object') {\n  console.log('Checking root inputData properties');\n  for (const key in inputData) {\n    if (key !== 'json' && key !== 'body' && typeof inputData[key] === 'string' && inputData[key].startsWith('data:image')) {\n      console.log('Found potential image data in property:', key);\n      imageData = inputData[key];\n      break;\n    }\n  }\n}\n\n// Validate input\nif (!imageData) {\n  console.log('No image data found in input');\n  throw new Error('No image data provided');\n}\n\nconsole.log('Image data found, length:', imageData.length);\nconsole.log('Filename:', filename);\nconsole.log('Content type:', contentType);\n\n// Return processed data\nreturn {\n  json: {\n    imageBase64: imageData,\n    filename: filename || 'unknown.jpg',\n    contentType: contentType || 'image/jpeg',\n    timestamp: new Date().toISOString()\n  }\n};"
       },
       "id": "process-image",
       "name": "Process Image",
@@ -140,5 +140,5 @@
     "templateCredsSetupCompleted": true
   },
   "id": "agriscan-workflow",
-  "tags": ["agriculture", "image-analysis", "disease-detection"]
+  "tags": []
 }
